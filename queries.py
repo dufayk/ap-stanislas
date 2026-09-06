@@ -117,6 +117,23 @@ def propositions_enseignant(conn, periode_id, ens_id):
     return {r["eleve_id"]: r for r in rows}
 
 
+def enseignants_ayant_propose(conn, periode_id):
+    """Nombre d'eleves proposes par enseignant sur une periode.
+
+    Sert a signaler d'un coup d'oeil, dans la liste deroulante, qui a deja
+    saisi ses propositions et qui reste a relancer.
+    """
+    return {
+        r["enseignant_id"]: r["n"]
+        for r in conn.execute(
+            """SELECT enseignant_id, COUNT(DISTINCT eleve_id) AS n
+                 FROM propositions WHERE periode_id = ?
+                GROUP BY enseignant_id""",
+            (periode_id,),
+        )
+    }
+
+
 def occupation_creneaux(conn, periode_id):
     """Nombre de places prises par creneau pour une periode."""
     rows = conn.execute(

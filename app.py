@@ -111,12 +111,17 @@ def register_routes(app):
         conn = dbmod.get_db()
         periode = periode_courante(conn)
         liste = q.enseignants(conn)
+        ont_propose = q.enseignants_ayant_propose(conn, periode["id"])
 
         ens_id = request.args.get("ens_id", type=int) or session.get("ens_id")
         ens = q.enseignant(conn, ens_id) if ens_id else None
         if ens is None:
             return render_template(
-                "enseignant.html", periode=periode, enseignants=liste, ens=None
+                "enseignant.html",
+                periode=periode,
+                enseignants=liste,
+                ens=None,
+                ont_propose=ont_propose,
             )
         session["ens_id"] = ens["id"]
 
@@ -149,6 +154,7 @@ def register_routes(app):
             enseignants=liste,
             ens=ens,
             groupes=groupes,
+            ont_propose=ont_propose,
         )
 
     @app.route("/enseignant/enregistrer", methods=["POST"])

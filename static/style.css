@@ -183,3 +183,12 @@ button:hover { background: #0f2f4e; }
   white-space: nowrap;
 }
 .puce.complet { color: var(--rouge); background: #fdf0f0; }
+
+/* Enseignants ayant deja propose des eleves sur la periode choisie.
+   La couleur des <option> n'est pas honoree par tous les navigateurs
+   mobiles : la coche devant le nom sert de repli visuel. */
+option.a-propose,
+span.a-propose {
+  color: var(--vert);
+  font-weight: 600;
+}

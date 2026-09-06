@@ -9,12 +9,20 @@
   <select id="ens_id" name="ens_id" onchange="this.form.submit()">
     <option value="">-- choisir mon nom --</option>
     {% for e in enseignants %}
-      <option value="{{ e.id }}" {% if ens and e.id == ens.id %}selected{% endif %}>
+      {% set nb = ont_propose.get(e.id) %}
+      <option value="{{ e.id }}" {% if ens and e.id == ens.id %}selected{% endif %}
+              class="{% if nb %}a-propose{% endif %}">
+        {%- if nb %}&#10003; {% endif -%}
         {{ e.nom }} {{ e.prenom or '' }}{% if e.discipline %} ({{ e.discipline }}){% endif %}
+        {%- if nb %} &ndash; {{ nb }} eleve{{ 's' if nb > 1 }}{% endif -%}
       </option>
     {% endfor %}
   </select>
   <noscript><button type="submit">Valider</button></noscript>
+  <p class="discret">
+    Un nom <span class="a-propose">&#10003; en vert</span> signale un collegue
+    ayant deja propose des eleves pour {{ periode.nom }}.
+  </p>
 </form>
 
 {% if ens %}

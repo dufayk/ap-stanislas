@@ -273,7 +273,9 @@ def register_routes(app):
         periodes = q.periodes(conn)
         classe = request.args.get("classe") or None
         pp = request.args.get("pp") or None
-        eleves, par_eleve = q.recap_eleves(conn, classe, pp)
+        groupe = request.args.get("groupe") or None
+        prescripteur = request.args.get("prescripteur", type=int) or None
+        eleves, par_eleve = q.recap_eleves(conn, classe, pp, groupe, prescripteur)
         return render_template(
             "recap.html",
             periodes=periodes,
@@ -281,8 +283,12 @@ def register_routes(app):
             par_eleve=par_eleve,
             classes=q.classes(conn),
             profs=q.profs_principaux(conn),
+            groupes=q.groupes(conn),
+            enseignants=q.enseignants(conn),
             classe=classe,
             pp=pp,
+            groupe=groupe,
+            prescripteur=prescripteur,
         )
 
     # ------------------------------------------------------------------

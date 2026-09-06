@@ -4,24 +4,53 @@
 
 <h1>Recapitulatif des AP par eleve</h1>
 
-<form method="get" class="carte">
-  <label for="classe">Classe</label>
-  <select id="classe" name="classe">
-    <option value="">Toutes</option>
-    {% for c in classes %}
-      <option value="{{ c }}" {% if c == classe %}selected{% endif %}>{{ c }}</option>
-    {% endfor %}
-  </select>
+<form method="get" class="carte filtres">
+  <div>
+    <label for="classe">Classe</label>
+    <select id="classe" name="classe">
+      <option value="">Toutes</option>
+      {% for c in classes %}
+        <option value="{{ c }}" {% if c == classe %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
 
-  <label for="pp">Professeur principal</label>
-  <select id="pp" name="pp">
-    <option value="">Tous</option>
-    {% for p in profs %}
-      <option value="{{ p }}" {% if p == pp %}selected{% endif %}>{{ p }}</option>
-    {% endfor %}
-  </select>
+  <div>
+    <label for="groupe">Groupe</label>
+    <select id="groupe" name="groupe">
+      <option value="">Tous</option>
+      {% for g in groupes %}
+        <option value="{{ g }}" {% if g == groupe %}selected{% endif %}>{{ g }}</option>
+      {% endfor %}
+    </select>
+  </div>
 
-  <button type="submit">Filtrer</button>
+  <div>
+    <label for="pp">Professeur principal</label>
+    <select id="pp" name="pp">
+      <option value="">Tous</option>
+      {% for p in profs %}
+        <option value="{{ p }}" {% if p == pp %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div>
+    <label for="prescripteur">Professeur prescripteur</label>
+    <select id="prescripteur" name="prescripteur">
+      <option value="">Tous</option>
+      {% for e in enseignants %}
+        <option value="{{ e.id }}" {% if e.id == prescripteur %}selected{% endif %}>
+          {{ e.nom }} {{ e.prenom }}{% if e.discipline %} ({{ e.discipline }}){% endif %}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="actions-filtres">
+    <button type="submit">Filtrer</button>
+    <a href="{{ url_for('recap') }}">Tout afficher</a>
+  </div>
 </form>
 
 <div class="defilement">
@@ -38,14 +67,17 @@
         <td>{{ e.nom }} {{ e.prenom }}</td>
         <td>{{ e.classe }}</td>
         {% for p in periodes %}
-          {% set ins = par_eleve.get(e.id, {}).get(p.id) %}
+          {# Un eleve peut suivre deux AP de matieres differentes sur une periode. #}
+          {% set inscriptions = par_eleve.get(e.id, {}).get(p.id, []) %}
           <td>
-            {% if ins %}
-              <strong>{{ ins.creneau_code }}</strong><br>
-              <span class="discret">{{ ins.matiere }} &middot; {{ ins.accompagnant_nom }}</span>
+            {% for ins in inscriptions %}
+              <div class="ap">
+                {{ ins.matiere }}<br>
+                <span class="discret">{{ ins.accompagnant_nom }}</span>
+              </div>
             {% else %}
               <span class="discret">&mdash;</span>
-            {% endif %}
+            {% endfor %}
           </td>
         {% endfor %}
       </tr>

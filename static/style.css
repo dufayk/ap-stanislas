@@ -192,3 +192,14 @@ span.a-propose {
   color: var(--vert);
   font-weight: 600;
 }
+
+/* Filtres du recapitulatif : alignes en ligne, empiles sur petit ecran. */
+.filtres { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: flex-end; }
+.filtres > div { display: flex; flex-direction: column; gap: .25rem; }
+.filtres label { margin: 0; }
+.filtres select { margin: 0; }
+.actions-filtres { flex-direction: row !important; align-items: center; gap: .8rem; }
+.actions-filtres button { margin: 0; }
+
+/* Plusieurs AP possibles sur une meme periode : ils sont empiles. */
+.ap + .ap { margin-top: .4rem; padding-top: .4rem; border-top: 1px dotted var(--bord); }

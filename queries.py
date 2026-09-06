@@ -183,31 +183,64 @@ def non_retenus_matiere(conn, periode_id, matiere):
 # Phase 2 : recapitulatif par eleve (professeur principal / direction)
 # ----------------------------------------------------------------------
 
-def recap_eleves(conn, classe=None, prof_principal=None):
-    """Une ligne par eleve, avec ses AP retenus periode par periode."""
-    sql = "SELECT * FROM eleves WHERE actif = 1"
+def recap_eleves(conn, classe=None, prof_principal=None, groupe=None,
+                 prescripteur_id=None):
+    """Une ligne par eleve, avec ses AP retenus periode par periode.
+
+    Un eleve peut suivre plusieurs AP sur une meme periode (deux matieres
+    differentes) : les inscriptions sont donc rassemblees dans une liste et
+    non dans une valeur unique.
+
+    Le filtre `prescripteur_id` retient les eleves que cet enseignant a
+    proposes, retenus ou non : une ligne sans aucun AP signale alors un eleve
+    propose qui n'a jamais obtenu de place.
+    """
+    sql = "SELECT DISTINCT e.* FROM eleves e WHERE e.actif = 1"
     params = []
     if classe:
-        sql += " AND classe = ?"
+        sql += " AND e.classe = ?"
         params.append(classe)
     if prof_principal:
-        sql += " AND prof_principal = ?"
+        sql += " AND e.prof_principal = ?"
         params.append(prof_principal)
-    sql += " ORDER BY classe, nom, prenom"
+    if groupe:
+        sql += " AND ? IN (%s)" % GROUPES_ELEVE
+        params.append(groupe)
+    if prescripteur_id:
+        sql += (" AND EXISTS (SELECT 1 FROM propositions p"
+                " WHERE p.eleve_id = e.id AND p.enseignant_id = ?)")
+        params.append(prescripteur_id)
+    sql += " ORDER BY e.classe, e.nom, e.prenom"
     eleves = conn.execute(sql, params).fetchall()
 
     inscriptions = conn.execute(
-        """SELECT p.eleve_id, p.periode_id, p.creneau_code, c.matiere, c.horaire,
-                  c.accompagnant_nom
+        """SELECT p.eleve_id, p.periode_id, c.matiere, c.horaire,
+                  c.accompagnant_nom, c.accompagnant_prenom,
+                  ens.nom AS prescripteur_nom
              FROM propositions p
-             JOIN creneaux c ON c.code = p.creneau_code
-            WHERE p.statut = 'retenu'"""
+             JOIN creneaux c      ON c.code = p.creneau_code
+             JOIN enseignants ens ON ens.id = p.enseignant_id
+            WHERE p.statut = 'retenu'
+            ORDER BY c.matiere"""
     ).fetchall()
 
     par_eleve = {}
     for r in inscriptions:
-        par_eleve.setdefault(r["eleve_id"], {})[r["periode_id"]] = r
+        par_periode = par_eleve.setdefault(r["eleve_id"], {})
+        par_periode.setdefault(r["periode_id"], []).append(r)
     return eleves, par_eleve
+
+
+def groupes(conn):
+    """Groupes de barrette, pour le filtre du recapitulatif."""
+    return [
+        r["groupe"]
+        for r in conn.execute(
+            """SELECT DISTINCT g.groupe FROM eleve_groupes g
+                 JOIN eleves e ON e.id = g.eleve_id
+                WHERE e.actif = 1 ORDER BY g.groupe"""
+        )
+    ]
 
 
 def classes(conn):
@@ -228,3 +261,4 @@ def profs_principaux(conn):
             " WHERE actif = 1 AND prof_principal IS NOT NULL ORDER BY prof_principal"
         )
     ]
+

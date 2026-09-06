@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block titre %}Mes creneaux AP{% endblock %}
+{% block contenu %}
+
+<h1>Mes creneaux AP &mdash; {{ periode.nom }}</h1>
+
+<form method="get" class="carte">
+  <label for="acc">Je suis</label>
+  <select id="acc" name="acc" onchange="this.form.submit()">
+    <option value="">-- choisir mon nom --</option>
+    {% for a in accompagnants %}
+      {% set valeur = a.nom ~ '|' ~ (a.prenom or '') %}
+      <option value="{{ valeur }}" {% if choisi and valeur == cle %}selected{% endif %}>
+        {{ a.nom }} {{ a.prenom or '' }} ({{ a.nb_creneaux }} creneau(x))
+      </option>
+    {% endfor %}
+  </select>
+  <noscript><button type="submit">Valider</button></noscript>
+</form>
+
+{% if choisi %}
+  {% for b in blocs %}
+    <section class="groupe">
+      <h2>
+        {{ b.creneau.code }} &middot; {{ b.creneau.matiere }}
+        <span class="discret">{{ b.creneau.horaire }}</span>
+        <span class="places {% if b.retenus|length >= b.creneau.capacite %}complet{% endif %}">
+          {{ b.retenus|length }}/{{ b.creneau.capacite }}
+        </span>
+      </h2>
+
+      {% if b.retenus %}
+        <table class="liste">
+          <thead>
+            <tr><th>Eleve</th><th>Classe</th><th>Groupe</th><th>Propose par</th></tr>
+          </thead>
+          <tbody>
+            {% for r in b.retenus %}
+              <tr>
+                <td>{{ r.nom }} {{ r.prenom }}</td>
+                <td>{{ r.classe }}</td>
+                <td>{{ r.groupe or '-' }}</td>
+                <td>{{ r.ens_nom }} {{ r.ens_prenom or '' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="discret">Aucun eleve retenu pour l'instant sur ce creneau.</p>
+      {% endif %}
+    </section>
+  {% endfor %}
+
+  {% for r in refuses if r.lignes %}
+    <details class="groupe secondaire">
+      <summary>{{ r.lignes|length }} proposition(s) non retenue(s) en {{ r.matiere }}</summary>
+      <table class="liste">
+        <tbody>
+          {% for l in r.lignes %}
+            <tr>
+              <td>{{ l.nom }} {{ l.prenom }}</td>
+              <td>{{ l.classe }}</td>
+              <td>{{ l.ens_nom }}</td>
+              <td class="motif">{{ l.motif }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+  {% endfor %}
+{% endif %}
+{% endblock %}

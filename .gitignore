@@ -1,0 +1,12 @@
+# Donnees personnelles d'eleves : jamais versionnees.
+AP.xlsx
+*.xlsx
+*.xlsm
+
+# Base de donnees et classeur envoye depuis l'application.
+instance/
+
+# Divers
+__pycache__/
+*.pyc
+.env

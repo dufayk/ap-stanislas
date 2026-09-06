@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block titre %}Administration{% endblock %}
+{% block contenu %}
+
+<h1>Administration</h1>
+
+<section class="carte">
+  <h2>Import du classeur</h2>
+  <p class="discret">
+    Les referentiels (periodes, creneaux, enseignants, eleves) sont mis a jour.
+    Les propositions deja enregistrees ne sont pas effacees.
+  </p>
+
+  <form method="post" enctype="multipart/form-data"
+        onsubmit="return confirm('Lancer l\'import du classeur ?')">
+    <label for="classeur">Classeur Excel (.xlsx)</label>
+    <input type="file" id="classeur" name="classeur" accept=".xlsx,.xlsm">
+    <p class="discret">
+      {% if excel_present %}
+        Sans fichier joint, le dernier classeur importe est relu :
+        <code>{{ excel }}</code>
+      {% else %}
+        Aucun classeur n'est encore present sur le serveur : joignez AP.xlsx.
+      {% endif %}
+    </p>
+    <button type="submit">Importer</button>
+  </form>
+</section>
+
+<section class="groupe">
+  <h2>Creneaux actifs</h2>
+  <table class="liste">
+    <thead>
+      <tr><th>AP</th><th>Matiere</th><th>Horaire</th><th>Accompagnant</th><th>Places</th></tr>
+    </thead>
+    <tbody>
+      {% for c in creneaux %}
+        <tr>
+          <td>{{ c.code }}</td>
+          <td>{{ c.matiere }}</td>
+          <td>{{ c.horaire }}</td>
+          <td>{{ c.accompagnant_nom }} {{ c.accompagnant_prenom or '' }}</td>
+          <td>{{ c.capacite }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="groupe">
+  <h2>Derniers imports</h2>
+  <table class="liste">
+    <tbody>
+      {% for i in imports %}
+        <tr><td>{{ i.created_at }}</td><td class="discret">{{ i.resume }}</td></tr>
+      {% else %}
+        <tr><td class="discret">Aucun import enregistre.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

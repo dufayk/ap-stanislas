@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titre %}Connexion{% endblock %}
+{% block contenu %}
+<h1>Accompagnement Personnalise</h1>
+<form method="post" class="carte">
+  <label for="mdp">Mot de passe de l'etablissement</label>
+  <input type="password" id="mdp" name="mot_de_passe" autofocus autocomplete="current-password" required>
+  <button type="submit">Entrer</button>
+</form>
+{% endblock %}

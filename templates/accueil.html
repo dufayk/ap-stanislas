@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titre %}Accueil{% endblock %}
+{% block contenu %}
+<h1>Accompagnement Personnalise</h1>
+<form method="post" class="carte">
+  <label for="periode">Periode</label>
+  <select id="periode" name="periode_id" required>
+    {% for p in periodes %}
+      <option value="{{ p.id }}" {% if p.id == periode_id %}selected{% endif %}>
+        {{ p.nom }}{% if p.description %} &mdash; {{ p.description }}{% endif %}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label for="role">Je suis</label>
+  <select id="role" name="role" required>
+    <option value="enseignant">Enseignant : je propose des eleves</option>
+    <option value="accompagnant">Professeur accompagnant : je consulte mes AP</option>
+    <option value="recap">Professeur principal / direction : recapitulatif</option>
+  </select>
+
+  <button type="submit">Continuer</button>
+</form>
+<p class="discret"><a href="{{ url_for('admin') }}">Administration (re-import du classeur)</a></p>
+{% endblock %}

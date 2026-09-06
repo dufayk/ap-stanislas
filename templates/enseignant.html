@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block titre %}Proposer des eleves{% endblock %}
+{% block contenu %}
+
+<h1>Proposer des eleves &mdash; {{ periode.nom }}</h1>
+
+<form method="get" class="carte">
+  <label for="ens_id">Je suis</label>
+  <select id="ens_id" name="ens_id" onchange="this.form.submit()">
+    <option value="">-- choisir mon nom --</option>
+    {% for e in enseignants %}
+      <option value="{{ e.id }}" {% if ens and e.id == ens.id %}selected{% endif %}>
+        {{ e.nom }} {{ e.prenom or '' }}{% if e.discipline %} ({{ e.discipline }}){% endif %}
+      </option>
+    {% endfor %}
+  </select>
+  <noscript><button type="submit">Valider</button></noscript>
+</form>
+
+{% if ens %}
+  <p class="discret">
+    Vous proposez des eleves pour l'AP de <strong>{{ ens.discipline or 'votre discipline' }}</strong>.
+    Le creneau est attribue automatiquement : parmi les creneaux ouverts a
+    l'eleve, le moins rempli est retenu.
+  </p>
+
+  {% if not groupes %}
+    <p class="alerte erreur">Aucun groupe n'est rattache a votre nom dans le classeur.</p>
+  {% else %}
+  <form method="post" action="{{ url_for('enseignant_enregistrer') }}">
+    <input type="hidden" name="ens_id" value="{{ ens.id }}">
+
+    {% for g in groupes %}
+      <section class="groupe">
+        <h2>{{ g.code }} <span class="discret">({{ g.eleves|length }} eleves)</span></h2>
+
+        {% for item in g.eleves %}
+          {% set eleve = item.eleve %}
+          {% set prop = item.prop %}
+          <label class="ligne-eleve {% if not item.possibles %}inactive{% endif %}">
+            <input type="checkbox" name="prop"
+                   value="{{ eleve.id }}:{{ g.code }}"
+                   {% if prop %}checked{% endif %}
+                   {% if not item.possibles %}disabled{% endif %}>
+            <span class="infos">
+              <span class="nom">{{ eleve.nom }} {{ eleve.prenom }}</span>
+              <span class="discret">{{ eleve.classe }}</span>
+
+              {% if prop and prop.statut == 'retenu' %}
+                <span class="badge retenu">
+                  Retenu &middot; {{ prop.creneau_code }} &middot; {{ prop.horaire }}
+                  ({{ prop.accompagnant_nom }})
+                </span>
+              {% elif prop and prop.statut == 'rejete' %}
+                <span class="badge rejete">Non retenu</span>
+                <em class="motif">{{ prop.motif }}</em>
+              {% elif prop %}
+                <span class="badge en_attente">En attente</span>
+              {% endif %}
+
+              {% if item.possibles %}
+                <span class="creneaux-possibles">
+                  {% for c in item.possibles %}
+                    <span class="puce {% if c.places >= c.creneau.capacite %}complet{% endif %}">
+                      {{ c.creneau.code }} {{ c.creneau.horaire }}
+                      {{ c.places }}/{{ c.creneau.capacite }}
+                    </span>
+                  {% endfor %}
+                </span>
+              {% else %}
+                <span class="discret">Aucun creneau de {{ ens.discipline }} ouvert a cet eleve.</span>
+              {% endif %}
+            </span>
+          </label>
+        {% endfor %}
+      </section>
+    {% endfor %}
+
+    <div class="barre-action">
+      <button type="submit">Enregistrer mes propositions</button>
+    </div>
+  </form>
+  {% endif %}
+{% endif %}
+{% endblock %}

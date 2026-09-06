@@ -1,0 +1,185 @@
+/* Feuille de style unique, pensee mobile d'abord :
+   les enseignants utilisent l'outil sur telephone entre deux cours. */
+
+:root {
+  --bleu: #17416b;
+  --bleu-clair: #e8f0f8;
+  --gris: #667;
+  --bord: #d7dde3;
+  --vert: #1c7a4a;
+  --rouge: #a52a2a;
+  --orange: #9a6b00;
+  --fond: #f6f7f9;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  color: #1b1f23;
+  background: var(--fond);
+}
+
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem 1rem;
+  padding: .7rem 1rem;
+  background: var(--bleu);
+  color: #fff;
+}
+.entete a { color: #fff; text-decoration: none; }
+.marque { font-weight: 700; }
+.entete nav { display: flex; gap: 1rem; margin-left: auto; flex-wrap: wrap; }
+.entete nav a { opacity: .9; }
+.entete nav a:hover { opacity: 1; text-decoration: underline; }
+
+main { max-width: 60rem; margin: 0 auto; padding: 1rem 1rem 5rem; }
+
+h1 { font-size: 1.3rem; }
+h2 { font-size: 1.05rem; margin: 0 0 .6rem; }
+
+.carte, .groupe {
+  background: #fff;
+  border: 1px solid var(--bord);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+label { display: block; font-weight: 600; margin: .6rem 0 .25rem; }
+
+select, input[type=password], input[type=text] {
+  width: 100%;
+  padding: .6rem;
+  font-size: 1rem;
+  border: 1px solid var(--bord);
+  border-radius: 8px;
+  background: #fff;
+}
+
+button {
+  margin-top: .8rem;
+  padding: .7rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--bleu);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:hover { background: #0f2f4e; }
+
+.alerte { padding: .7rem 1rem; border-radius: 8px; }
+.alerte.ok { background: #e3f5ea; color: var(--vert); }
+.alerte.erreur { background: #fbe9e9; color: var(--rouge); }
+
+.discret { color: var(--gris); font-size: .88rem; font-weight: 400; }
+
+/* --- Ecran enseignant --------------------------------------------- */
+
+.eleve {
+  border-top: 1px solid var(--bord);
+  padding: .45rem 0;
+}
+.eleve summary {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+}
+.eleve .nom { font-weight: 600; }
+
+.badge {
+  font-size: .75rem;
+  padding: .1rem .45rem;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.badge.retenu      { color: var(--vert);   border-color: var(--vert);   background: #eef8f2; }
+.badge.rejete      { color: var(--rouge);  border-color: var(--rouge);  background: #fdf0f0; }
+.badge.en_attente  { color: var(--orange); border-color: var(--orange); background: #fdf6e6; }
+
+.choix {
+  display: flex;
+  gap: .6rem;
+  align-items: flex-start;
+  font-weight: 400;
+  padding: .5rem .6rem;
+  margin: .35rem 0;
+  background: var(--bleu-clair);
+  border-radius: 8px;
+}
+.choix input[type=checkbox] { width: 1.25rem; height: 1.25rem; margin-top: .15rem; }
+
+.places {
+  font-size: .8rem;
+  color: var(--gris);
+  white-space: nowrap;
+}
+.places.complet { color: var(--rouge); font-weight: 700; }
+
+.motif { display: block; color: var(--rouge); font-size: .82rem; }
+
+.barre-action {
+  position: sticky;
+  bottom: 0;
+  padding: .6rem 0;
+  background: linear-gradient(to top, var(--fond) 70%, transparent);
+}
+.barre-action button { width: 100%; margin: 0; }
+
+/* --- Tableaux ------------------------------------------------------ */
+
+.defilement { overflow-x: auto; }
+
+.liste { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.liste th, .liste td {
+  text-align: left;
+  padding: .4rem .5rem;
+  border-bottom: 1px solid var(--bord);
+  vertical-align: top;
+}
+.liste th { color: var(--gris); font-size: .8rem; text-transform: uppercase; }
+
+.secondaire { margin-top: .8rem; }
+.secondaire summary { cursor: pointer; color: var(--gris); font-size: .9rem; }
+
+.pied {
+  padding: 1rem;
+  text-align: center;
+  color: var(--gris);
+  font-size: .8rem;
+}
+
+/* --- Ligne eleve (une case a cocher par eleve) --------------------- */
+
+.ligne-eleve {
+  display: flex;
+  gap: .7rem;
+  align-items: flex-start;
+  font-weight: 400;
+  margin: 0;
+  padding: .55rem .2rem;
+  border-top: 1px solid var(--bord);
+}
+.ligne-eleve.inactive { opacity: .55; }
+.ligne-eleve input[type=checkbox] { width: 1.4rem; height: 1.4rem; margin-top: .15rem; flex: none; }
+.ligne-eleve .infos { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .5rem; }
+
+.creneaux-possibles { display: flex; flex-wrap: wrap; gap: .3rem; width: 100%; }
+.puce {
+  font-size: .72rem;
+  color: var(--gris);
+  background: var(--bleu-clair);
+  border-radius: 999px;
+  padding: .1rem .45rem;
+  white-space: nowrap;
+}
+.puce.complet { color: var(--rouge); background: #fdf0f0; }

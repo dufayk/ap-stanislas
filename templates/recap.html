@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block titre %}Recapitulatif par eleve{% endblock %}
+{% block contenu %}
+
+<h1>Recapitulatif des AP par eleve</h1>
+
+<form method="get" class="carte">
+  <label for="classe">Classe</label>
+  <select id="classe" name="classe">
+    <option value="">Toutes</option>
+    {% for c in classes %}
+      <option value="{{ c }}" {% if c == classe %}selected{% endif %}>{{ c }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="pp">Professeur principal</label>
+  <select id="pp" name="pp">
+    <option value="">Tous</option>
+    {% for p in profs %}
+      <option value="{{ p }}" {% if p == pp %}selected{% endif %}>{{ p }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit">Filtrer</button>
+</form>
+
+<div class="defilement">
+<table class="liste">
+  <thead>
+    <tr>
+      <th>Eleve</th><th>Classe</th>
+      {% for p in periodes %}<th>{{ p.nom }}</th>{% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in eleves %}
+      <tr>
+        <td>{{ e.nom }} {{ e.prenom }}</td>
+        <td>{{ e.classe }}</td>
+        {% for p in periodes %}
+          {% set ins = par_eleve.get(e.id, {}).get(p.id) %}
+          <td>
+            {% if ins %}
+              <strong>{{ ins.creneau_code }}</strong><br>
+              <span class="discret">{{ ins.matiere }} &middot; {{ ins.accompagnant_nom }}</span>
+            {% else %}
+              <span class="discret">&mdash;</span>
+            {% endif %}
+          </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="discret">{{ eleves|length }} eleve(s).</p>
+{% endblock %}

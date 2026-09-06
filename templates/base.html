@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}AP{% endblock %} &middot; Lycee Stanislas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="entete">
+  <a class="marque" href="{{ url_for('accueil') }}">AP &middot; Stanislas</a>
+  {% if session.get('auth') %}
+    <nav>
+      <a href="{{ url_for('enseignant') }}">Proposer</a>
+      <a href="{{ url_for('accompagnant') }}">Mes AP</a>
+      <a href="{{ url_for('recap') }}">Recap</a>
+      <a href="{{ url_for('logout') }}">Quitter</a>
+    </nav>
+  {% endif %}
+</header>
+
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for categorie, message in messages %}
+      <p class="alerte {{ categorie }}">{{ message }}</p>
+    {% endfor %}
+  {% endwith %}
+  {% block contenu %}{% endblock %}
+</main>
+
+<footer class="pied">
+  Accompagnement Personnalise &middot; Lycee Stanislas, Cannes
+</footer>
+</body>
+</html>

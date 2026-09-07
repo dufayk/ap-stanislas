@@ -203,3 +203,49 @@ span.a-propose {
 
 /* Plusieurs AP possibles sur une meme periode : ils sont empiles. */
 .ap + .ap { margin-top: .4rem; padding-top: .4rem; border-top: 1px dotted var(--bord); }
+
+/* Bouton secondaire (impression) : meme gabarit, moins appuye. */
+.secondaire-bouton {
+  color: var(--bleu);
+  background: #fff;
+  border: 1px solid var(--bleu);
+}
+.secondaire-bouton:hover { color: #fff; background: var(--bleu); }
+
+/* En-tete rappelant les filtres : reserve au papier. */
+.entete-impression { display: none; }
+
+/* --- Impression / export PDF --------------------------------------
+   Le tableau filtre doit tenir seul sur la feuille : navigation,
+   formulaire de filtres et pied de page sont retires, l'en-tete
+   d'impression prend le relais pour indiquer le perimetre. */
+@media print {
+  @page { size: A4 landscape; margin: 12mm; }
+
+  body { background: #fff; font-size: 11pt; }
+  main { max-width: none; padding: 0; }
+
+  .entete, .pied, .filtres, .alerte, h1 { display: none !important; }
+
+  .entete-impression { display: block; margin-bottom: .6rem; }
+  .entete-impression h2 { font-size: 1.1rem; margin: 0 0 .2rem; }
+  .entete-impression p { margin: 0; font-size: .85rem; color: #333; }
+
+  .defilement { overflow: visible; }
+
+  .liste { font-size: 9pt; }
+  .liste th, .liste td { padding: .18rem .3rem; }
+  .liste th {
+    color: #000;
+    border-bottom: 1px solid #000;
+  }
+  /* Repeter la ligne d'en-tete en haut de chaque page. */
+  .liste thead { display: table-header-group; }
+  .liste tr { page-break-inside: avoid; break-inside: avoid; }
+
+  .discret { color: #444; }
+  .ap + .ap { border-top: 1px dotted #999; }
+
+  /* Le decompte est deja donne dans l'en-tete d'impression. */
+  main > p.discret { display: none; }
+}

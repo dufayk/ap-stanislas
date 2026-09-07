@@ -50,8 +50,26 @@
   <div class="actions-filtres">
     <button type="submit">Filtrer</button>
     <a href="{{ url_for('recap') }}">Tout afficher</a>
+    <button type="button" class="secondaire-bouton" onclick="window.print()">
+      Imprimer / PDF
+    </button>
   </div>
 </form>
+
+{# Visible seulement a l'impression : rappelle le perimetre du tableau. #}
+<div class="entete-impression">
+  <h2>Recapitulatif des AP par eleve</h2>
+  <p>
+    {% if filtres_actifs %}
+      {% for libelle, valeur in filtres_actifs %}
+        {{ libelle }} : <strong>{{ valeur }}</strong>{% if not loop.last %} &middot; {% endif %}
+      {% endfor %}
+    {% else %}
+      Tous les eleves
+    {% endif %}
+  </p>
+  <p>{{ eleves|length }} eleve(s) &middot; edite le {{ edite_le }}</p>
+</div>
 
 <div class="defilement">
 <table class="liste">

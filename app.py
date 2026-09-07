@@ -276,6 +276,24 @@ def register_routes(app):
         groupe = request.args.get("groupe") or None
         prescripteur = request.args.get("prescripteur", type=int) or None
         eleves, par_eleve = q.recap_eleves(conn, classe, pp, groupe, prescripteur)
+        enseignants = q.enseignants(conn)
+
+        # Rappel des filtres en tete de l'impression : la feuille papier doit
+        # dire d'elle-meme sur quel perimetre elle porte.
+        filtres_actifs = []
+        if classe:
+            filtres_actifs.append(("Classe", classe))
+        if groupe:
+            filtres_actifs.append(("Groupe", groupe))
+        if pp:
+            filtres_actifs.append(("Professeur principal", pp))
+        if prescripteur:
+            ens = next((e for e in enseignants if e["id"] == prescripteur), None)
+            if ens is not None:
+                filtres_actifs.append(
+                    ("Professeur prescripteur", "%s %s" % (ens["nom"], ens["prenom"]))
+                )
+
         return render_template(
             "recap.html",
             periodes=periodes,
@@ -284,11 +302,13 @@ def register_routes(app):
             classes=q.classes(conn),
             profs=q.profs_principaux(conn),
             groupes=q.groupes(conn),
-            enseignants=q.enseignants(conn),
+            enseignants=enseignants,
             classe=classe,
             pp=pp,
             groupe=groupe,
             prescripteur=prescripteur,
+            filtres_actifs=filtres_actifs,
+            edite_le=dt.date.today().strftime("%d/%m/%Y"),
         )
 
     # ------------------------------------------------------------------

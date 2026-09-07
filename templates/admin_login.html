@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titre %}Administration{% endblock %}
+{% block contenu %}
+<h1>Administration</h1>
+<p class="discret">
+  Le re-import du classeur remplace tout le referentiel : cet ecran demande
+  un mot de passe distinct de celui de l'etablissement.
+</p>
+<form method="post" class="carte">
+  <label for="mdp">Mot de passe d'administration</label>
+  <input type="password" id="mdp" name="mot_de_passe" autofocus
+         autocomplete="current-password" required>
+  <button type="submit">Entrer</button>
+</form>
+{% endblock %}

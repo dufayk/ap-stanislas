@@ -10,6 +10,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Mot de passe partage de l'etablissement (voir README pour le changer).
 APP_PASSWORD = os.environ.get("AP_PASSWORD", "stanislas")
 
+# Mot de passe de la page Administration, demande en plus du precedent.
+# Le re-import du classeur ecrase tout le referentiel : il ne doit pas etre
+# a portee de tous ceux qui connaissent le mot de passe de l'etablissement.
+ADMIN_PASSWORD = os.environ.get("AP_ADMIN_PASSWORD", "KARINE")
+
 # Cle de signature des cookies de session.
 SECRET_KEY = os.environ.get("AP_SECRET_KEY", "dev-secret-a-changer-en-production")
 

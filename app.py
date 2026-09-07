@@ -45,6 +45,21 @@ def connecte():
     return session.get("auth") is True
 
 
+def admin_connecte():
+    return session.get("admin_auth") is True
+
+
+def mot_de_passe_valide(saisi, attendu):
+    """Comparaison a temps constant.
+
+    Les chaines sont encodees : compare_digest refuse les caracteres non
+    ASCII, qu'un utilisateur peut tres bien saisir dans le formulaire.
+    """
+    return secrets.compare_digest(
+        str(saisi).encode("utf-8"), str(attendu).encode("utf-8")
+    )
+
+
 def register_routes(app):
 
     # ------------------------------------------------------------------
@@ -62,12 +77,29 @@ def register_routes(app):
     def login():
         if request.method == "POST":
             saisi = request.form.get("mot_de_passe", "")
-            if secrets.compare_digest(saisi, config.APP_PASSWORD):
+            if mot_de_passe_valide(saisi, config.APP_PASSWORD):
                 session.permanent = True
                 session["auth"] = True
                 return redirect(request.args.get("next") or url_for("accueil"))
             flash("Mot de passe incorrect.", "erreur")
         return render_template("login.html")
+
+    @app.route("/admin/login", methods=["GET", "POST"])
+    def admin_login():
+        """Second verrou, propre a l'administration."""
+        if request.method == "POST":
+            saisi = request.form.get("mot_de_passe", "")
+            if mot_de_passe_valide(saisi, config.ADMIN_PASSWORD):
+                session["admin_auth"] = True
+                return redirect(url_for("admin"))
+            flash("Mot de passe d'administration incorrect.", "erreur")
+        return render_template("admin_login.html")
+
+    @app.route("/admin/logout")
+    def admin_logout():
+        """Referme l'administration sans deconnecter de l'application."""
+        session.pop("admin_auth", None)
+        return redirect(url_for("accueil"))
 
     @app.route("/logout")
     def logout():
@@ -316,6 +348,8 @@ def register_routes(app):
     # ------------------------------------------------------------------
     @app.route("/admin", methods=["GET", "POST"])
     def admin():
+        if not admin_connecte():
+            return redirect(url_for("admin_login"))
         conn = dbmod.get_db()
         if request.method == "POST":
             try:

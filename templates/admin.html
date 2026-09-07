@@ -3,6 +3,10 @@
 {% block contenu %}
 
 <h1>Administration</h1>
+<p class="discret">
+  <a href="{{ url_for('admin_logout') }}">Quitter l'administration</a>
+  &mdash; referme cet ecran sans vous deconnecter de l'application.
+</p>
 
 <section class="carte">
   <h2>Import du classeur</h2>

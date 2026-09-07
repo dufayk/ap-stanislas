@@ -14,7 +14,8 @@ python importer.py          # crée la base et importe AP.xlsx
 python app.py               # http://localhost:5000
 ```
 
-Mot de passe par défaut : `stanislas` (à changer, voir §4).
+Mots de passe par défaut : `stanislas` pour l'application,
+`KARINE` pour la page Administration (à changer, voir §4).
 
 ## 2. Ce que fait l'application
 
@@ -26,7 +27,7 @@ puis un **rôle** :
 | Enseignant proposant | `/enseignant` | ses groupes, ses élèves, une case à cocher par élève, statut de chaque proposition et créneau attribué |
 | Professeur accompagnant | `/accompagnant` | pour chacun de ses créneaux : élèves retenus, groupe concerné, enseignant proposant (consultation seule) |
 | Prof principal / direction | `/recap` | une ligne par élève, une colonne par période, AP suivi |
-| Administration | `/admin` | ré-import du classeur, liste des créneaux, journal des imports |
+| Administration | `/admin` | ré-import du classeur, liste des créneaux, journal des imports — **second mot de passe** |
 
 Aucun e-mail n'est envoyé : tout est consultable en ligne.
 
@@ -90,14 +91,24 @@ Les règles sont couvertes par des tests :
 python tests_regles.py
 ```
 
-## 4. Changer le mot de passe partagé
+## 4. Changer les mots de passe
 
-Le mot de passe est lu dans la variable d'environnement `AP_PASSWORD`.
+Deux mots de passe, lus dans l'environnement :
 
-- **En production** : définir `AP_PASSWORD` dans la configuration de
+| Écran | Variable | Défaut |
+|---|---|---|
+| toute l'application | `AP_PASSWORD` | `stanislas` |
+| page Administration | `AP_ADMIN_PASSWORD` | `KARINE` |
+
+L'administration est demandée **en plus** du mot de passe partagé : le
+ré-import du classeur remplace tout le référentiel, il ne doit pas être à
+portée de tous ceux qui accèdent à l'outil. Le lien *Quitter
+l'administration* referme cet écran sans déconnecter de l'application.
+
+- **En production** : définir `AP_PASSWORD` et `AP_ADMIN_PASSWORD` dans la configuration de
   l'hébergeur (Render, Railway, PythonAnywhere…), puis redémarrer l'app.
-- **En local / à défaut** : modifier la valeur par défaut dans `config.py`
-  (`APP_PASSWORD = os.environ.get("AP_PASSWORD", "stanislas")`).
+- **En local / à défaut** : modifier les valeurs par défaut dans `config.py`
+  (`APP_PASSWORD`, `ADMIN_PASSWORD`).
 
 Définir aussi `AP_SECRET_KEY` (chaîne aléatoire, ~40 caractères) en
 production : elle signe les cookies de session. Changer cette clé
@@ -156,7 +167,7 @@ endroit sur le serveur, dans le dossier de données.
 4. Onglet **Web** → *Add a new web app* → **Manual configuration** → Python 3.
 5. Dans *WSGI configuration file*, coller le contenu de
    `wsgi_pythonanywhere.py` en remplaçant `COMPTE` par votre identifiant et
-   les deux valeurs `A CHANGER` (mot de passe partagé, clé de session).
+   les valeurs `A CHANGER` (mots de passe partagé et administration, clé de session).
 6. *Reload* l'application, puis ouvrir `https://COMPTE.eu.pythonanywhere.com`,
    aller sur **Administration** et envoyer `AP.xlsx`.
 
@@ -166,7 +177,7 @@ Mise à jour du code ensuite : renvoyer les fichiers modifiés puis *Reload*.
 
 - Build : `pip install -r requirements.txt`
 - Start : `gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4`
-- Variables : `AP_PASSWORD`, `AP_SECRET_KEY`, et `AP_DATABASE` pointant vers
+- Variables : `AP_PASSWORD`, `AP_ADMIN_PASSWORD`, `AP_SECRET_KEY`, et `AP_DATABASE` pointant vers
   un **disque persistant** (ex. `/var/data/ap.sqlite3`). Sans disque
   persistant — le cas de l'offre gratuite de Render — la base **et** le
   classeur envoyé sont effacés à chaque redéploiement.
@@ -178,7 +189,7 @@ Mise à jour du code ensuite : renvoyer les fichiers modifiés puis *Reload*.
 waitress-serve --host=0.0.0.0 --port=8000 app:app
 ```
 
-Définir au préalable `AP_PASSWORD`, `AP_SECRET_KEY` et `AP_DATABASE`. C'est
+Définir au préalable `AP_PASSWORD`, `AP_ADMIN_PASSWORD`, `AP_SECRET_KEY` et `AP_DATABASE`. C'est
 l'option où les données ne quittent pas le lycée ; elle demande un poste
 allumé en permanence et, pour un accès depuis l'extérieur, l'aide du service
 informatique.
@@ -189,7 +200,7 @@ SQLite convient largement à 15–20 utilisateurs. Une seule précaution :
 garder **un seul processus** avec plusieurs threads plutôt que plusieurs
 processus concurrents en écriture (`--workers 1 --threads 4`).
 
-Servir l'application en **HTTPS** : le mot de passe partagé circule dans le
+Servir l'application en **HTTPS** : les mots de passe circulent dans le
 formulaire de connexion. PythonAnywhere et Render le font par défaut ; sur
 un serveur interne, il faut le configurer.
 

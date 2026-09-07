@@ -361,6 +361,52 @@ class TestDiscipline(unittest.TestCase):
         self.assertEqual(maths, {"AP-MA1"})
 
 
+class TestAccesAdministration(unittest.TestCase):
+    """La page Administration demande un second mot de passe."""
+
+    def setUp(self):
+        import app as appmod
+
+        self.app = appmod.create_app()
+        self.app.config["TESTING"] = True
+        self.client = self.app.test_client()
+        with self.client.session_transaction() as session:
+            session["auth"] = True   # mot de passe de l'etablissement saisi
+
+    def test_redirige_vers_le_second_verrou(self):
+        reponse = self.client.get("/admin")
+        self.assertEqual(reponse.status_code, 302)
+        self.assertTrue(reponse.headers["Location"].endswith("/admin/login"))
+
+    def test_import_refuse_sans_le_second_mot_de_passe(self):
+        reponse = self.client.post("/admin", data={})
+        self.assertEqual(reponse.status_code, 302)
+        self.assertTrue(reponse.headers["Location"].endswith("/admin/login"))
+
+    def test_mauvais_mot_de_passe(self):
+        self.client.post("/admin/login", data={"mot_de_passe": "mauvais"})
+        with self.client.session_transaction() as session:
+            self.assertIsNone(session.get("admin_auth"))
+
+    def test_mot_de_passe_accentue_ne_plante_pas(self):
+        # compare_digest refuse le non-ASCII : les chaines sont encodees.
+        reponse = self.client.post("/admin/login", data={"mot_de_passe": "accentueé"})
+        self.assertEqual(reponse.status_code, 200)
+
+    def test_bon_mot_de_passe_puis_sortie(self):
+        import config
+
+        self.client.post(
+            "/admin/login", data={"mot_de_passe": config.ADMIN_PASSWORD}
+        )
+        self.assertEqual(self.client.get("/admin").status_code, 200)
+        self.client.get("/admin/logout")
+        self.assertEqual(self.client.get("/admin").status_code, 302)
+        with self.client.session_transaction() as session:
+            # On quitte l'administration sans quitter l'application.
+            self.assertTrue(session.get("auth"))
+
+
 class TestDonneesReelles(unittest.TestCase):
     """Verifie la regle de rattachement sur la base issue de AP.xlsx."""
 

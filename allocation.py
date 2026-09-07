@@ -13,10 +13,8 @@ Regles (cf. cahier des charges) :
 Choix du creneau
   - parmi les creneaux de la matiere ouverts a l'eleve, on retient le
     **moins rempli** (a egalite, le premier dans l'ordre du classeur) ;
-  - un creneau complet, ou dont l'horaire chevauche celui d'un AP deja
-    retenu pour l'eleve, est ecarte : les horaires sont compares comme des
-    intervalles, deux creneaux d'un meme jour pouvant se recouvrir en partie
-    sans porter le meme libelle ;
+  - un creneau complet, ou place le meme jour qu'un AP deja retenu pour
+    l'eleve, est ecarte : un eleve ne suit qu'un seul AP par jour ;
   - un horaire dont une autre matiere proposee pour le meme eleve a besoin
     (parce qu'elle n'a qu'un seul creneau possible) est evite tant qu'une
     alternative existe : sans cela, une matiere servie en premier bloquerait
@@ -25,8 +23,8 @@ Choix du creneau
 
 Periode 1
   - 15 places max par creneau, premier arrive premier servi (horodatage).
-  - Un eleve deja retenu a un horaire ne peut pas etre retenu sur un creneau
-    qui le chevauche : la proposition la plus ancienne l'emporte.
+  - Un eleve deja retenu un jour donne ne peut pas l'etre une seconde fois
+    le meme jour : la proposition la plus ancienne l'emporte.
 
 Periodes 2 a 5, ordre de priorite
   1. Le francais est prioritaire sur les autres matieres.
@@ -137,7 +135,7 @@ def _recompute_periode(conn, periode, inscrits_precedents, creneaux, eligibilite
     occupation = {}          # creneau_code -> nb de places prises
     retenu_par_matiere = {}  # (eleve_id, matiere normalisee) -> creneau_code
     # eleve_id -> [(horaire, creneau_code)] deja retenus. Une liste et non un
-    # index par libelle : le conflit se juge par recouvrement, pas par egalite.
+    # index par libelle : le conflit se juge sur le jour, pas sur le texte.
     horaires_retenus = {}
 
     def horaire_pris(eleve_id, horaire):
@@ -222,7 +220,7 @@ def _recompute_periode(conn, periode, inscrits_precedents, creneaux, eligibilite
                     if horaire_pris(prop["eleve_id"], c["horaire"])
                 )
                 motif = (
-                    "Horaire incompatible avec un AP deja retenu (%s)" % bloquant
+                    "Eleve deja pris par un AP le meme jour (%s)" % bloquant
                 )
             else:
                 motif = "Tous les creneaux de %s sont complets (%s)" % (

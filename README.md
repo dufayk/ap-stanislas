@@ -47,11 +47,10 @@ jour. Le moteur retient, parmi les créneaux de la matière ouverts à cet
 élève :
 
 - le **moins rempli** (à égalité, le premier dans l'ordre du classeur) ;
-- en écartant les créneaux complets et ceux dont l'horaire **chevauche**
-  celui d'un AP déjà retenu pour l'élève dans une autre matière. Les horaires
-  sont comparés comme des intervalles : *Lundi 12h05‑13h00* et
-  *Lundi 12h30‑13h25* se recouvrent de 30 minutes et sont donc incompatibles,
-  bien que leurs libellés diffèrent ;
+- en écartant les créneaux complets et ceux placés **le même jour** qu'un AP
+  déjà retenu pour l'élève : un élève ne suit qu'**un seul AP par jour**.
+  *Lundi 12h05‑13h00* et *Lundi 12h30‑13h25* sont donc incompatibles, et
+  *Lundi 08h00* le serait tout autant ;
 - en évitant, tant qu'une alternative existe, un horaire dont une autre
   matière proposée pour le même élève a besoin parce qu'elle n'a qu'un seul
   créneau possible. Sans cette précaution, le français (3 créneaux) servi
@@ -62,14 +61,14 @@ enseignants de la même matière le proposent, la seconde proposition est
 signalée comme doublon, sans consommer de place.
 
 **Période 1** — 15 places par créneau, premier arrivé premier servi
-(horodatage de la proposition). Un élève retenu sur un créneau ne peut pas
-l'être sur un créneau qui le chevauche : seule la proposition la plus
-ancienne passe, l'autre est rejetée avec le motif affiché au proposant.
+(horodatage de la proposition). Un élève retenu un jour donné ne peut pas
+l'être une seconde fois le même jour : seule la proposition la plus ancienne
+passe, l'autre est rejetée avec le motif affiché au proposant.
 
-Quand le classeur ne donne qu'une heure de début, une durée de 55 min est
-supposée (`util.DUREE_AP_MINUTES`). Un libellé d'horaire illisible (jour ou
-heure absents) retombe sur une comparaison de texte : mieux vaut manquer un
-conflit que d'en inventer un.
+Seul le **jour** du libellé est lu (`util.jour_du_creneau`), les heures
+n'entrent pas dans la règle. Un libellé sans jour reconnaissable retombe sur
+une comparaison de texte : mieux vaut manquer un conflit que d'en inventer un
+sur une saisie douteuse.
 
 **Périodes 2 à 5** — ordre de priorité :
 1. le français l'emporte sur les autres matières ;
@@ -227,9 +226,9 @@ changement de schéma.
   de Terminale au classeur pour que ce créneau soit utilisable.
 - Trois créneaux partagent l'horaire *Lundi 12h30‑13h25* (AP2, AP3, AP7) et
   deux autres *Mardi* / *Vendredi* / *Jeudi 12h30‑13h25* : c'est là que se
-  déclenchent les règles de conflit. **AP1** (*Lundi 12h05‑13h00*) recouvre
-  ces trois créneaux du lundi de 30 minutes : le moteur les traite comme
-  incompatibles.
+  déclenchent les règles de conflit. **AP1** (*Lundi 12h05‑13h00*) tombe lui
+  aussi un lundi : les quatre créneaux du lundi s'excluent mutuellement pour
+  un même élève.
 - AP7 rattache ses élèves par **classe** (`1STMG`) et non par groupe de
   barrette ; les 22 élèves de 1STMG n'ont d'ailleurs aucun groupe renseigné.
 - La capacité (15) est stockée par créneau en base : elle peut être ajustée

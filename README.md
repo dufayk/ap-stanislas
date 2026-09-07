@@ -201,6 +201,9 @@ endroit sur le serveur, dans le dossier de données.
    aller sur **Administration** et envoyer `AP.xlsx`.
 
 Mise à jour du code ensuite : renvoyer les fichiers modifiés puis *Reload*.
+Le schéma se met à jour tout seul au démarrage (`db.init_db`) : une colonne
+ajoutée par une nouvelle version, comme `periodes.figee`, apparaît au premier
+*Reload*, sans manipulation ni perte de données.
 
 ### Render / Railway (déploiement automatique depuis Git)
 

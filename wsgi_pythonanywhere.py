@@ -2,7 +2,7 @@
 
 A recopier dans le fichier WSGI propose par PythonAnywhere
 (onglet Web > "WSGI configuration file"), en remplacant COMPTE par votre
-nom d'utilisateur et les deux valeurs marquees A CHANGER.
+nom d'utilisateur et les trois valeurs marquees A CHANGER.
 
 Ce fichier n'est pas lu en local : `python app.py` et waitress utilisent
 directement app.py.
@@ -20,6 +20,11 @@ if DOSSIER_CODE not in sys.path:
 # 2. Configuration. Ces valeurs ne sortent pas de votre compte prive.
 #    Le mot de passe partage : celui que vous communiquerez aux enseignants.
 os.environ.setdefault("AP_PASSWORD", "A CHANGER")
+
+#    Le mot de passe de la page Administration, demande en plus du precedent.
+#    Reserve a la direction : il commande le re-import du classeur et la
+#    cloture des periodes.
+os.environ.setdefault("AP_ADMIN_PASSWORD", "A CHANGER")
 
 #    La cle de signature des cookies de session. Une chaine aleatoire longue,
 #    differente du mot de passe, que personne n'a besoin de connaitre.

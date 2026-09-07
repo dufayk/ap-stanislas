@@ -176,7 +176,57 @@ class TestConflitsHoraires(BaseRegles):
         allocation.recompute_all(self.conn)
         statut, code, motif = self.resultat(1, 1, 1)
         self.assertEqual(statut, "rejete")
-        self.assertIn("meme horaire", motif)
+        self.assertIn("Horaire incompatible", motif)
+
+    def _creneau(self, code, matiere, horaire, ordre=9):
+        self.conn.execute(
+            """INSERT INTO creneaux (code, accompagnant_nom, accompagnant_prenom,
+                                     matiere, horaire, capacite, ordre)
+               VALUES (?, 'ACC', 'A', ?, ?, 15, ?)""",
+            (code, matiere, horaire, ordre),
+        )
+        self.conn.execute(
+            "INSERT INTO creneau_groupes (creneau_code, groupe) VALUES (?, 'G1')",
+            (code,),
+        )
+
+    def test_chevauchement_partiel_bloque(self):
+        # AP-MA2 (12h05-13h00) et AP-FR1 (12h30-13h25) sont un lundi et se
+        # recouvrent de 30 minutes : les libelles different, pas les horaires.
+        self.conn.execute("DELETE FROM creneaux WHERE code IN ('AP-MA1', 'AP-FR2')")
+        self._creneau("AP-MA2", "MATHEMATIQUES", "Lundi 12h05-13h00")
+        self.proposer(1, "MATHEMATIQUES", 1, "2025-09-01T08:00:00", enseignant=3)
+        self.proposer(1, "Francais", 1, "2025-09-01T09:00:00", enseignant=1)
+        allocation.recompute_all(self.conn)
+        self.assertEqual(self.resultat(1, 1, 3)[1], "AP-MA2")
+        statut, code, motif = self.resultat(1, 1, 1)
+        self.assertEqual(statut, "rejete")
+        self.assertIn("Horaire incompatible", motif)
+
+    def test_meme_jour_sans_recouvrement_cumulable(self):
+        # Deux creneaux du lundi qui ne se touchent pas : aucun conflit.
+        self.conn.execute("DELETE FROM creneaux WHERE code IN ('AP-MA1', 'AP-FR2')")
+        self._creneau("AP-MA2", "MATHEMATIQUES", "Lundi 11h00-11h55")
+        self.proposer(1, "MATHEMATIQUES", 1, "2025-09-01T08:00:00", enseignant=3)
+        self.proposer(1, "Francais", 1, "2025-09-01T09:00:00", enseignant=1)
+        allocation.recompute_all(self.conn)
+        self.assertEqual(self.resultat(1, 1, 3)[1], "AP-MA2")
+        self.assertEqual(self.resultat(1, 1, 1)[1], "AP-FR1")
+
+    def test_trois_ap_sur_une_periode(self):
+        # Trois matieres a trois horaires disjoints : rien ne plafonne le
+        # nombre d'AP d'un eleve, seules les matieres et les horaires comptent.
+        self.conn.execute(
+            "INSERT INTO enseignants (id, nom, prenom, discipline)"
+            " VALUES (4, 'PROF', 'QUATRE', 'PHYSIQUE CHIMIE')"
+        )
+        self.proposer(1, "Francais", 1, "2025-09-01T08:00:00", enseignant=1)
+        self.proposer(1, "MATHEMATIQUES", 1, "2025-09-01T09:00:00", enseignant=3)
+        self.proposer(1, "PHYSIQUE CHIMIE", 1, "2025-09-01T10:00:00", enseignant=4)
+        allocation.recompute_all(self.conn)
+        codes = [self.resultat(1, 1, e)[1] for e in (1, 3, 4)]
+        self.assertEqual(codes, ["AP-FR2", "AP-MA1", "AP-PC1"])
+        self.assertEqual(len(set(codes)), 3)
 
     def test_premier_arrive_premier_servi_en_periode_1(self):
         # En periode 1 le francais n'a aucune priorite : les maths, proposees
@@ -187,6 +237,42 @@ class TestConflitsHoraires(BaseRegles):
         allocation.recompute_all(self.conn)
         self.assertEqual(self.resultat(1, 1, 3)[0], "retenu")
         self.assertEqual(self.resultat(1, 1, 1)[0], "rejete")
+
+
+class TestHoraires(unittest.TestCase):
+    """Lecture des horaires du classeur et detection des recouvrements."""
+
+    def test_analyse_avec_heure_de_fin(self):
+        self.assertEqual(util.analyser_horaire("Lundi 12h05-13h00"), ("lundi", 725, 780))
+
+    def test_heure_de_fin_absente_duree_type(self):
+        jour, debut, fin = util.analyser_horaire("Mardi 12h30")
+        self.assertEqual((jour, debut), ("mardi", 750))
+        self.assertEqual(fin - debut, util.DUREE_AP_MINUTES)
+
+    def test_libelle_non_exploitable(self):
+        self.assertIsNone(util.analyser_horaire("Lundi"))
+        self.assertIsNone(util.analyser_horaire(""))
+
+    def test_recouvrement_partiel(self):
+        self.assertTrue(
+            util.horaires_incompatibles("Lundi 12h05-13h00", "Lundi 12h30-13h25")
+        )
+
+    def test_jours_differents(self):
+        self.assertFalse(
+            util.horaires_incompatibles("Lundi 12h05-13h00", "Mardi 12h30-13h25")
+        )
+
+    def test_creneaux_jointifs_compatibles(self):
+        # 12h30 est la fin de l'un et le debut de l'autre : pas de recouvrement.
+        self.assertFalse(
+            util.horaires_incompatibles("Lundi 12h05-12h30", "Lundi 12h30-13h25")
+        )
+
+    def test_repli_sur_l_egalite_quand_le_libelle_est_illisible(self):
+        self.assertTrue(util.horaires_incompatibles("Lundi", "lundi"))
+        self.assertFalse(util.horaires_incompatibles("Lundi", "Mardi"))
 
 
 class TestPeriodesSuivantes(BaseRegles):

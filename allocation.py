@@ -8,6 +8,12 @@ Le calcul est entierement deterministe et rejoue a chaque modification :
 aucune inscription n'est figee en base autrement que comme resultat du moteur.
 Ajouter ou retirer une proposition reclasse donc correctement tous les eleves.
 
+Une periode **figee** est laissee telle quelle : ses propositions gardent
+leur statut et leur creneau, quoi qu'il arrive au classeur ensuite. Ses
+inscrits restent pris en compte pour la regle de rotation de la periode
+suivante. C'est le seul moyen de figer un resultat, tout le reste etant
+recalcule.
+
 Regles (cf. cahier des charges) :
 
 Choix du creneau
@@ -110,8 +116,29 @@ def _horaires_contraints(propositions, candidats_par_prop):
     return contraints
 
 
+def est_figee(periode):
+    """Vrai si la periode est cloturee. Tolere une base pas encore migree."""
+    return "figee" in periode.keys() and bool(periode["figee"])
+
+
+def _inscrits(conn, periode):
+    """Eleves retenus d'une periode, lus en base sans rien recalculer."""
+    return {
+        r[0]
+        for r in conn.execute(
+            "SELECT eleve_id FROM propositions WHERE periode_id = ? AND statut = ?",
+            (periode["id"], STATUT_RETENU),
+        )
+    }
+
+
 def _recompute_periode(conn, periode, inscrits_precedents, creneaux, eligibilite):
     """Affecte les propositions d'une periode. Retourne les eleves retenus."""
+    if est_figee(periode):
+        # Rien n'est recalcule : on se contente de transmettre les inscrits a
+        # la periode suivante, qui en a besoin pour la regle de rotation.
+        return _inscrits(conn, periode)
+
     propositions = conn.execute(
         """SELECT p.*, e.actif AS eleve_actif
              FROM propositions p

@@ -361,6 +361,90 @@ class TestDiscipline(unittest.TestCase):
         self.assertEqual(maths, {"AP-MA1"})
 
 
+class TestPeriodesFigees(BaseRegles):
+    """Une periode cloturee echappe au recalcul."""
+
+    def _figer(self, periode_id):
+        self.conn.execute("UPDATE periodes SET figee = 1 WHERE id = ?", (periode_id,))
+
+    def test_le_recalcul_ne_touche_plus_une_periode_figee(self):
+        self.proposer(1, "Francais", 1, "2025-09-01T08:00:00")
+        allocation.recompute_all(self.conn)
+        self.assertEqual(self.resultat(1, 1), ("retenu", "AP-FR1", None))
+
+        # Le creneau disparait du classeur : sans gel, la proposition serait
+        # rejetee au prochain recalcul.
+        self._figer(1)
+        self.conn.execute("UPDATE creneaux SET actif = 0 WHERE code = 'AP-FR1'")
+        allocation.recompute_all(self.conn)
+        self.assertEqual(self.resultat(1, 1), ("retenu", "AP-FR1", None))
+
+    def test_sans_gel_la_meme_situation_rejette(self):
+        self.proposer(1, "Francais", 1, "2025-09-01T08:00:00")
+        allocation.recompute_all(self.conn)
+        self.conn.execute("UPDATE creneaux SET actif = 0 WHERE matiere = 'Francais'")
+        allocation.recompute_all(self.conn)
+        self.assertEqual(self.resultat(1, 1)[0], "rejete")
+
+    def test_une_periode_figee_alimente_encore_la_rotation(self):
+        # La periode 2 doit savoir qui etait inscrit en periode 1, meme figee :
+        # sinon la priorite aux non-inscrits ne s'applique plus.
+        self.conn.execute("DELETE FROM creneaux WHERE code = 'AP-FR2'")
+        self.conn.execute("UPDATE creneaux SET capacite = 1 WHERE code = 'AP-FR1'")
+        self.proposer(1, "Francais", 1, "2025-09-01T08:00:00")
+        allocation.recompute_all(self.conn)
+        self._figer(1)
+        self.proposer(2, "Francais", 1, "2025-11-01T08:00:00")
+        self.proposer(2, "Francais", 2, "2025-11-01T09:00:00")
+        allocation.recompute_all(self.conn)
+        # L'eleve 2, jamais inscrit, passe devant l'eleve 1 malgre l'horodatage.
+        self.assertEqual(self.resultat(2, 2)[0], "retenu")
+        self.assertEqual(self.resultat(2, 1)[0], "rejete")
+
+    def test_les_periodes_ouvertes_restent_recalculees(self):
+        self.proposer(1, "Francais", 1, "2025-09-01T08:00:00")
+        self.proposer(2, "Francais", 1, "2025-11-01T08:00:00")
+        allocation.recompute_all(self.conn)
+        self._figer(1)
+        self.conn.execute("UPDATE creneaux SET actif = 0 WHERE matiere = 'Francais'")
+        allocation.recompute_all(self.conn)
+        self.assertEqual(self.resultat(1, 1)[0], "retenu")   # figee
+        self.assertEqual(self.resultat(2, 1)[0], "rejete")   # ouverte
+
+
+class TestClotureDepuisAdministration(unittest.TestCase):
+    """Cloture et reouverture depuis l'ecran d'administration."""
+
+    def setUp(self):
+        import app as appmod
+
+        self.app = appmod.create_app()
+        self.app.config["TESTING"] = True
+        self.client = self.app.test_client()
+
+    def _connecte(self, admin=False):
+        import config
+
+        with self.client.session_transaction() as session:
+            session["auth"] = True
+        if admin:
+            self.client.post(
+                "/admin/login", data={"mot_de_passe": config.ADMIN_PASSWORD}
+            )
+
+    def test_cloture_refusee_sans_le_mot_de_passe_administration(self):
+        self._connecte()
+        reponse = self.client.post("/admin/periode/1", data={"figee": "1"})
+        self.assertEqual(reponse.status_code, 302)
+        self.assertTrue(reponse.headers["Location"].endswith("/admin/login"))
+
+    def test_periode_inconnue(self):
+        self._connecte(admin=True)
+        self.assertEqual(
+            self.client.post("/admin/periode/9999", data={"figee": "1"}).status_code, 404
+        )
+
+
 class TestAccesAdministration(unittest.TestCase):
     """La page Administration demande un second mot de passe."""
 

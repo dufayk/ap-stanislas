@@ -32,6 +32,43 @@
 </section>
 
 <section class="groupe">
+  <h2>Periodes</h2>
+  <p class="discret">
+    Le moteur recalcule toutes les periodes a chaque modification : ajouter un
+    creneau peut donc redistribuer des eleves deja affectes, y compris sur une
+    periode passee. Cloturer une periode la met hors d'atteinte du moteur.
+  </p>
+  <table class="liste">
+    <thead>
+      <tr><th>Periode</th><th>Etat</th><th>Inscrits</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for p in periodes %}
+        <tr>
+          <td>{{ p.nom }}</td>
+          <td>
+            {% if p.figee %}
+              <span class="badge retenu">Cloturee</span>
+            {% else %}
+              <span class="discret">Ouverte</span>
+            {% endif %}
+          </td>
+          <td>{{ inscrits_par_periode.get(p.id, 0) }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin_periode', periode_id=p.id) }}">
+              <input type="hidden" name="figee" value="{{ 0 if p.figee else 1 }}">
+              <button type="submit" class="secondaire-bouton">
+                {{ "Rouvrir" if p.figee else "Cloturer" }}
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="groupe">
   <h2>Creneaux actifs</h2>
   <table class="liste">
     <thead>

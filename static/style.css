@@ -249,3 +249,8 @@ span.a-propose {
   /* Le decompte est deja donne dans l'en-tete d'impression. */
   main > p.discret { display: none; }
 }
+
+/* Boutons places dans une cellule de tableau : pas de marge haute, sinon ils
+   se decalent sous le contenu de la ligne. */
+.liste form { margin: 0; }
+.liste button { margin-top: 0; padding: .35rem .8rem; font-size: .85rem; }

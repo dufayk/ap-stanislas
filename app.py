@@ -193,6 +193,13 @@ def register_routes(app):
     def enseignant_enregistrer():
         conn = dbmod.get_db()
         periode = periode_courante(conn)
+        if allocation.est_figee(periode):
+            flash(
+                "La periode %s est cloturee : les propositions n'y sont plus "
+                "modifiables." % periode["nom"],
+                "erreur",
+            )
+            return redirect(url_for("enseignant"))
         ens_id = request.form.get("ens_id", type=int)
         ens = q.enseignant(conn, ens_id) if ens_id else None
         if ens is None:
@@ -372,9 +379,32 @@ def register_routes(app):
             "admin.html",
             imports=imports,
             creneaux=creneaux,
+            periodes=q.periodes(conn),
+            inscrits_par_periode=q.inscrits_par_periode(conn),
             excel=chemin,
             excel_present=os.path.exists(chemin),
         )
+
+    @app.route("/admin/periode/<int:periode_id>", methods=["POST"])
+    def admin_periode(periode_id):
+        """Cloture ou rouvre une periode."""
+        if not admin_connecte():
+            return redirect(url_for("admin_login"))
+        conn = dbmod.get_db()
+        periode = q.periode(conn, periode_id)
+        if periode is None:
+            abort(404)
+        figee = 1 if request.form.get("figee") == "1" else 0
+        conn.execute("UPDATE periodes SET figee = ? WHERE id = ?", (figee, periode_id))
+        conn.commit()
+        if not figee:
+            # La reouverture remet la periode sous le controle du moteur.
+            allocation.recompute_all(conn)
+        flash(
+            "Periode %s %s." % (periode["nom"], "cloturee" if figee else "rouverte"),
+            "ok",
+        )
+        return redirect(url_for("admin"))
 
     def _classeur_envoye(fichier):
         """Enregistre le classeur envoye et retourne son chemin.

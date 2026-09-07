@@ -16,7 +16,10 @@ CREATE TABLE IF NOT EXISTS periodes (
     id          INTEGER PRIMARY KEY,
     nom         TEXT NOT NULL UNIQUE,
     description TEXT,
-    ordre       INTEGER NOT NULL
+    ordre       INTEGER NOT NULL,
+    -- Periode cloturee : le moteur n'y touche plus, ses affectations sont
+    -- conservees telles quelles meme apres un re-import du classeur.
+    figee       INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS creneaux (
@@ -129,6 +132,7 @@ def init_db(conn=None):
     conn = conn or connect()
     _avant_schema(conn)
     conn.executescript(SCHEMA)
+    _ajouter_colonnes(conn)
     _apres_schema(conn)
     conn.commit()
     if own:
@@ -137,6 +141,18 @@ def init_db(conn=None):
 
 def _colonnes(conn, table):
     return [r[1] for r in conn.execute("PRAGMA table_info(%s)" % table)]
+
+
+def _ajouter_colonnes(conn):
+    """Colonnes ajoutees apres coup.
+
+    CREATE TABLE IF NOT EXISTS laisse intactes les tables deja creees : les
+    bases existantes doivent recevoir les nouvelles colonnes explicitement.
+    """
+    if "figee" not in _colonnes(conn, "periodes"):
+        conn.execute(
+            "ALTER TABLE periodes ADD COLUMN figee INTEGER NOT NULL DEFAULT 0"
+        )
 
 
 def _avant_schema(conn):

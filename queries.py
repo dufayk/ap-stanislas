@@ -24,6 +24,17 @@ def periodes(conn):
     return conn.execute("SELECT * FROM periodes ORDER BY ordre").fetchall()
 
 
+def inscrits_par_periode(conn):
+    """Nombre d'eleves retenus par periode, pour l'ecran d'administration."""
+    return {
+        r["periode_id"]: r["n"]
+        for r in conn.execute(
+            """SELECT periode_id, COUNT(DISTINCT eleve_id) AS n
+                 FROM propositions WHERE statut = 'retenu' GROUP BY periode_id"""
+        )
+    }
+
+
 def periode(conn, periode_id):
     return conn.execute("SELECT * FROM periodes WHERE id = ?", (periode_id,)).fetchone()
 

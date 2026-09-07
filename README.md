@@ -145,6 +145,35 @@ Identités utilisées pour les rapprochements : `AP1…APn` pour les créneaux,
 le classeur crée donc une nouvelle fiche ; les propositions restent
 attachées à l'ancienne.
 
+### Ce qu'un ajout au classeur change vraiment
+
+Le moteur rejoue **toutes** les périodes ouvertes à chaque import. Aucune
+proposition n'est perdue, mais les affectations peuvent être redistribuées :
+
+| Ajout | Effet sur les affectations existantes |
+|---|---|
+| un enseignant prescripteur | aucun |
+| un groupe sur un créneau | aucun |
+| un élève | aucun |
+| **un créneau** | **redistribution** : le moteur vise le créneau le moins rempli, un créneau vide attire donc des élèves déjà placés |
+
+Personne ne perd son AP dans ce dernier cas, mais un élève peut changer de
+jour et d'accompagnant après coup — y compris sur une période passée.
+
+## 5 bis. Clôturer une période
+
+Page **Administration** → section *Périodes* → *Clôturer*. Une période
+clôturée est mise hors d'atteinte du moteur : ses propositions gardent leur
+statut et leur créneau quoi qu'il arrive ensuite au classeur, et les
+enseignants ne peuvent plus y modifier leurs propositions.
+
+Ses inscrits restent comptés pour la règle de rotation de la période
+suivante. *Rouvrir* la remet sous le contrôle du moteur et déclenche un
+recalcul immédiat.
+
+À clôturer une fois les listes diffusées aux familles, avant tout ajout de
+créneau en cours d'année.
+
 ## 6. Déploiement
 
 L'application est un WSGI standard exposé sous `app:app`.
